@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Khata — Daily Spend Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFE9DC;
+    --paper-dark:#E4DCC8;
+    --ink:#22303C;
+    --ink-soft:#4B5A66;
+    --accent:#B4740E;
+    --accent-soft:#DDA84E;
+    --line:#C9BFA8;
+    --red:#8B3A3A;
+    --green:#3E6B4F;
+    --white:#FBF9F3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .app{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 18px 60px;
+  }
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:10px;
+    margin-bottom:18px;
+  }
+  header h1{
+    font-family:'Lora',serif;
+    font-weight:700;
+    font-size:1.5rem;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header .sub{
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+  nav.tabs{
+    display:flex;
+    gap:0;
+    margin-bottom:20px;
+    border:1.5px solid var(--ink);
+  }
+  nav.tabs button{
+    flex:1;
+    background:none;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-size:0.82rem;
+    font-weight:600;
+    padding:10px 6px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    border-right:1.5px solid var(--ink);
+  }
+  nav.tabs button:last-child{border-right:none;}
+  nav.tabs button.active{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .card{
+    background:var(--white);
+    border:1.5px solid var(--ink);
+    padding:18px;
+    margin-bottom:18px;
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:0.72rem;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input[type=number], .field input[type=date], .field input[type=text]{
+    width:100%;
+    border:none;
+    border-bottom:2px solid var(--line);
+    background:transparent;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:1.05rem;
+    padding:6px 2px;
+    color:var(--ink);
+    outline:none;
+  }
+  .field input:focus{border-bottom-color:var(--accent);}
+  .field input[type=text]{font-family:'Inter',sans-serif; font-size:0.95rem;}
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:2px;
+  }
+  .chip{
+    border:1.3px solid var(--line);
+    background:transparent;
+    padding:6px 12px;
+    font-size:0.78rem;
+    font-weight:500;
+    border-radius:2px;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .chip.selected{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--paper);
+  }
+  .custom-cat{
+    margin-top:10px;
+    display:none;
+  }
+  .custom-cat.show{display:block;}
+  button.primary{
+    width:100%;
+    background:var(--accent);
+    color:var(--white);
+    border:none;
+    padding:13px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:0.92rem;
+    cursor:pointer;
+    letter-spacing:0.01em;
+  }
+  button.primary:active{background:#96600b;}
+  .entry-list{margin-top:4px;}
+  .entry-list h2, .summary h2{
+    font-family:'Lora',serif;
+    font-size:1rem;
+    font-weight:600;
+    margin:0 0 10px;
+    color:var(--ink-soft);
+  }
+  .entry-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .entry-row:last-child{border-bottom:none;}
+  .entry-row .meta{display:flex; flex-direction:column;}
+  .entry-row .cat{font-size:0.88rem; font-weight:600;}
+  .entry-row .date{font-size:0.72rem; color:var(--ink-soft);}
+  .entry-row .amt{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:0.95rem;
+  }
+  .entry-row .del{
+    background:none;border:none;color:var(--red);
+    font-size:0.72rem; cursor:pointer; margin-left:10px;
+    text-decoration:underline;
+  }
+  .empty{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:0.85rem;
+    padding:20px 0;
+    font-style:italic;
+  }
+  .month-select{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .month-select button{
+    background:none;border:1.3px solid var(--ink);
+    width:32px;height:32px;font-size:1rem;cursor:pointer;
+  }
+  .month-select .label{
+    font-family:'Lora',serif;
+    font-weight:600;
+    font-size:1.05rem;
+  }
+  .total-block{
+    text-align:center;
+    padding:16px 0 20px;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:18px;
+  }
+  .total-block .amt{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:2.1rem;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .total-block .lbl{
+    font-size:0.75rem;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .bar-row{margin-bottom:14px;}
+  .bar-row .top{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.82rem;
+    margin-bottom:5px;
+  }
+  .bar-row .top .cat{font-weight:600;}
+  .bar-row .top .val{font-family:'IBM Plex Mono',monospace; color:var(--ink-soft);}
+  .bar-track{
+    height:9px;
+    background:var(--paper-dark);
+    border:1px solid var(--line);
+  }
+  .bar-fill{height:100%; background:var(--accent);}
+  .day-total{
+    display:flex;justify-content:space-between;
+    font-size:0.85rem;padding:6px 0;border-bottom:1px dashed var(--line);
+  }
+  .day-total .d{color:var(--ink-soft);}
+  .day-total .a{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Khata</h1>
+    <div class="sub">personal spend ledger</div>
+  </header>
+
+  <nav class="tabs">
+    <button id="tabAdd" class="active">Add Entry</button>
+    <button id="tabSummary">Month Summary</button>
+  </nav>
+
+  <div id="viewAdd">
+    <div class="card">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="inpDate">
+      </div>
+      <div class="field">
+        <label>Amount spent (₹)</label>
+        <input type="number" id="inpAmount" placeholder="0" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <div class="chips" id="catChips"></div>
+        <div class="custom-cat" id="customCatWrap">
+          <input type="text" id="inpCustomCat" placeholder="Type category name">
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes (optional)</label>
+        <input type="text" id="inpNotes" placeholder="e.g. what you ate, what you bought">
+      </div>
+      <div class="field">
+        <label>Location (optional)</label>
+        <input type="text" id="inpLocation" placeholder="e.g. Faridabad, Sector 15 market">
+      </div>
+      <button class="primary" id="btnAdd">Add Entry</button>
+    </div>
+
+    <div class="card entry-list">
+      <h2>Recent entries</h2>
+      <div id="recentList"></div>
+    </div>
+  </div>
+
+  <div id="viewSummary" style="display:none;">
+    <div class="month-select">
+      <button id="prevMonth">‹</button>
+      <div class="label" id="monthLabel"></div>
+      <button id="nextMonth">›</button>
+    </div>
+    <div class="card">
+      <div class="total-block">
+        <div class="amt" id="monthTotal">₹0</div>
+        <div class="lbl">total spent this month</div>
+      </div>
+      <h2 style="margin-bottom:14px;">Where it went</h2>
+      <div id="catBars"></div>
+      <div class="empty" id="summaryEmpty" style="display:none;">No entries logged for this month yet.</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-bottom:14px;">By location</h2>
+      <div id="locBars"></div>
+      <div class="empty" id="locEmpty" style="display:none;">No location logged for this month.</div>
+    </div>
+    <div class="card">
+      <h2>Day-wise</h2>
+      <div id="dayList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRESET_CATS = ["Food","Travel","Grocery","Bills","Shopping","Rent","Medical","Other"];
+let entries = [];
+let selectedCat = PRESET_CATS[0];
+let viewMonth = new Date();
+viewMonth.setDate(1);
+
+const STORAGE_KEY = "khata-entries";
+
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+async function loadEntries(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    entries = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    entries = [];
+  }
+}
+
+async function saveEntries(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }catch(e){
+    console.error("save failed", e);
+  }
+}
+
+function renderChips(){
+  const wrap = document.getElementById('catChips');
+  wrap.innerHTML = '';
+  PRESET_CATS.forEach(cat=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (cat===selectedCat ? ' selected':'');
+    b.textContent = cat;
+    b.type = 'button';
+    b.onclick = ()=>{
+      selectedCat = cat;
+      document.getElementById('customCatWrap').classList.remove('show');
+      renderChips();
+    };
+    wrap.appendChild(b);
+  });
+  const customBtn = document.createElement('button');
+  customBtn.className = 'chip' + (selectedCat==='__custom__' ? ' selected':'');
+  customBtn.textContent = '+ Custom';
+  customBtn.type = 'button';
+  customBtn.onclick = ()=>{
+    selectedCat = '__custom__';
+    document.getElementById('customCatWrap').classList.add('show');
+    document.getElementById('inpCustomCat').focus();
+    renderChips();
+  };
+  wrap.appendChild(customBtn);
+}
+
+function renderRecent(){
+  const list = document.getElementById('recentList');
+  const sorted = [...entries].sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id).slice(0,8);
+  if(sorted.length===0){
+    list.innerHTML = '<div class="empty">No entries yet. Add your first spend above.</div>';
+    return;
+  }
+  list.innerHTML = sorted.map(e=>`
+    <div class="entry-row">
+      <div class="meta">
+        <span class="cat">${escapeHtml(e.category)}</span>
+        <span class="date">${formatDate(e.date)}${e.notes ? ' · '+escapeHtml(e.notes) : ''}</span>
+      </div>
+      <div style="display:flex;align-items:center;">
+        <span class="amt">₹${e.amount}</span>
+        <button class="del" data-id="${e.id}">remove</button>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.del').forEach(btn=>{
+    btn.onclick = async ()=>{
+      entries = entries.filter(e=> String(e.id) !== btn.dataset.id);
+      await saveEntries();
+      renderRecent();
+      renderSummary();
+    };
+  });
+}
+
+function formatDate(d){
+  const dt = new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function monthKey(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+
+function renderSummary(){
+  const key = monthKey(viewMonth);
+  document.getElementById('monthLabel').textContent = viewMonth.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const monthEntries = entries.filter(e=> e.date.startsWith(key));
+  const total = monthEntries.reduce((s,e)=> s+Number(e.amount),0);
+  document.getElementById('monthTotal').textContent = '₹'+total.toLocaleString('en-IN');
+
+  const byCat = {};
+  monthEntries.forEach(e=>{
+    byCat[e.category] = (byCat[e.category]||0) + Number(e.amount);
+  });
+  const catArr = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const barsWrap = document.getElementById('catBars');
+  const emptyMsg = document.getElementById('summaryEmpty');
+  if(catArr.length===0){
+    barsWrap.innerHTML='';
+    emptyMsg.style.display='block';
+  }else{
+    emptyMsg.style.display='none';
+    barsWrap.innerHTML = catArr.map(([cat,amt])=>{
+      const pct = total>0 ? Math.round((amt/total)*100) : 0;
+      return `
+      <div class="bar-row">
+        <div class="top"><span class="cat">${escapeHtml(cat)}</span><span class="val">₹${amt.toLocaleString('en-IN')} · ${pct}%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  const byLoc = {};
+  monthEntries.forEach(e=>{
+    if(!e.location) return;
+    byLoc[e.location] = (byLoc[e.location]||0) + Number(e.amount);
+  });
+  const locArr = Object.entries(byLoc).sort((a,b)=>b[1]-a[1]);
+  const locWrap = document.getElementById('locBars');
+  const locEmpty = document.getElementById('locEmpty');
+  if(locArr.length===0){
+    locWrap.innerHTML='';
+    locEmpty.style.display='block';
+  }else{
+    locEmpty.style.display='none';
+    locWrap.innerHTML = locArr.map(([loc,amt])=>{
+      const pct = total>0 ? Math.round((amt/total)*100) : 0;
+      return `
+      <div class="bar-row">
+        <div class="top"><span class="cat">${escapeHtml(loc)}</span><span class="val">₹${amt.toLocaleString('en-IN')} · ${pct}%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  const byDay = {};
+  monthEntries.forEach(e=>{
+    byDay[e.date] = (byDay[e.date]||0) + Number(e.amount);
+  });
+  const dayArr = Object.entries(byDay).sort((a,b)=> b[0].localeCompare(a[0]));
+  const dayList = document.getElementById('dayList');
+  dayList.innerHTML = dayArr.length ? dayArr.map(([date,amt])=>`
+    <div class="day-total"><span class="d">${formatDate(date)}</span><span class="a">₹${amt.toLocaleString('en-IN')}</span></div>
+  `).join('') : '<div class="empty">No entries for this month.</div>';
+}
+
+document.getElementById('inpDate').value = todayStr();
+
+document.getElementById('btnAdd').onclick = async ()=>{
+  const dateEl = document.getElementById('inpDate');
+  const amtEl = document.getElementById('inpAmount');
+  const customEl = document.getElementById('inpCustomCat');
+  const notesEl = document.getElementById('inpNotes');
+  const locEl = document.getElementById('inpLocation');
+  const date = dateEl.value || todayStr();
+  const amount = parseFloat(amtEl.value);
+  let category = selectedCat;
+  if(category === '__custom__'){
+    category = customEl.value.trim();
+  }
+  if(!amount || amount<=0){
+    amtEl.style.borderBottomColor = 'var(--red)';
+    amtEl.focus();
+    return;
+  }
+  if(!category){
+    customEl.style.borderBottomColor = 'var(--red)';
+    customEl.focus();
+    return;
+  }
+  const notes = notesEl.value.trim();
+  const location = locEl.value.trim();
+  entries.push({id:Date.now(), date, amount, category, notes, location});
+  await saveEntries();
+  amtEl.value='';
+  customEl.value='';
+  notesEl.value='';
+  locEl.value='';
+  amtEl.style.borderBottomColor='';
+  renderRecent();
+  renderSummary();
+};
+
+document.getElementById('tabAdd').onclick = ()=>{
+  document.getElementById('viewAdd').style.display='block';
+  document.getElementById('viewSummary').style.display='none';
+  document.getElementById('tabAdd').classList.add('active');
+  document.getElementById('tabSummary').classList.remove('active');
+};
+document.getElementById('tabSummary').onclick = ()=>{
+  document.getElementById('viewAdd').style.display='none';
+  document.getElementById('viewSummary').style.display='block';
+  document.getElementById('tabSummary').classList.add('active');
+  document.getElementById('tabAdd').classList.remove('active');
+  renderSummary();
+};
+document.getElementById('prevMonth').onclick = ()=>{
+  viewMonth.setMonth(viewMonth.getMonth()-1);
+  renderSummary();
+};
+document.getElementById('nextMonth').onclick = ()=>{
+  viewMonth.setMonth(viewMonth.getMonth()+1);
+  renderSummary();
+};
+
+(async function init(){
+  await loadEntries();
+  renderChips();
+  renderRecent();
+  renderSummary();
+})();
+</script>
+</body>
+</html>
